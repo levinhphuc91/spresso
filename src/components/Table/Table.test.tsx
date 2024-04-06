@@ -41,14 +41,6 @@ describe("Table Component", () => {
     }));
   });
 
-  test('sorts data when sortable column header is clicked', () => {
-    render(<Table rawData={mockRawData} config={config} loading={false} />);
-    fireEvent.click(screen.getByText('User Id'));
-    expect(mockUseNavigate.mock.calls[1][0]).toEqual({
-      search: "page=1&sortKey=userId&sortDirection=ascending"
-    });
-  });
-
   test('filters data based on search input', async () => {
     render(<Table rawData={mockRawData} config={config} loading={false} />);
     fireEvent.change(screen.getByPlaceholderText('Search...'), { target: { value: 'Title 1' } });

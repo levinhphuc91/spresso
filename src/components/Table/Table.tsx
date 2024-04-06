@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { ColumnType, DataType, Sorting } from "../../types/index";
+import { useNavigate } from "react-router-dom";
+import { ColumnType, DataType } from "../../types/index";
+import TablePagination from "./TablePagination";
+import useTableState from "../../customHook/useTableState";
 
 type TableProps = {
   rawData: DataType[];
@@ -9,43 +11,34 @@ type TableProps = {
 };
 
 const Table: React.FC<TableProps> = ({ rawData, config, loading }) => {
-  const location = useLocation();
   const navigate = useNavigate();
 
-  const searchParams = new URLSearchParams(location.search);
-  const initialPage = parseInt(searchParams.get("page") || "1", 10);
-  const initialSearchQuery = searchParams.get("search") || "";
-  const initialSortKey = searchParams.get("sortKey") || "";
-  const initialSortDirection = searchParams.get("sortDirection") || "";
-  const initialSort =
-    initialSortDirection && initialSortKey
-      ? {
-          key: initialSortKey,
-          direction: initialSortDirection,
-        }
-      : null;
-
   const recordsPerPage = 25;
-  const [totalPages, setTotalPages] = useState(1);
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
-  const [currentPage, setCurrentPage] = useState(initialPage);
-  const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
-  const [sortConfig, setSortConfig] = useState<Sorting | null>(initialSort);
   const [data, setData] = useState<DataType[]>([]);
+  const {
+    currentPage,
+    setCurrentPage,
+    searchQuery,
+    setSearchQuery,
+    sortConfig,
+    setSortConfig,
+    totalPages,
+  } = useTableState(data);
 
   useEffect(() => {
     setData(rawData);
-    setTotalPages(Math.ceil(rawData.length / recordsPerPage));
   }, [rawData]);
 
   useEffect(() => {
     const newSearchParams = new URLSearchParams();
-  
-    newSearchParams.set('page', currentPage.toString());
-    if (searchQuery) newSearchParams.set('search', searchQuery);
-    if (sortConfig?.key) newSearchParams.set('sortKey', sortConfig.key);
-    if (sortConfig?.direction) newSearchParams.set('sortDirection', sortConfig.direction);
-  
+
+    newSearchParams.set("page", currentPage.toString());
+    if (searchQuery) newSearchParams.set("search", searchQuery);
+    if (sortConfig?.key) newSearchParams.set("sortKey", sortConfig.key);
+    if (sortConfig?.direction)
+      newSearchParams.set("sortDirection", sortConfig.direction);
+
     navigate({
       search: newSearchParams.toString(),
     });
@@ -146,30 +139,6 @@ const Table: React.FC<TableProps> = ({ rawData, config, loading }) => {
     ));
   };
 
-  const renderPagination = () => {
-    return (
-      <div className="mt-4 flex justify-end items-center">
-        <button
-          onClick={onPrevious}
-          disabled={currentPage === 1}
-          className="p-2 rounded border-2"
-        >
-          Previous
-        </button>
-        <span className="mx-4">
-          Page {currentPage} of {totalPages}
-        </span>
-        <button
-          onClick={onNext}
-          disabled={currentPage === totalPages}
-          className="p-2 border-2 rounded"
-        >
-          Next
-        </button>
-      </div>
-    );
-  };
-
   const renderSelectedRow = () => {
     if (selectedRows.size === 0) return null;
     return (
@@ -228,7 +197,12 @@ const Table: React.FC<TableProps> = ({ rawData, config, loading }) => {
         </thead>
         <tbody>{!loading ? renderTableBody() : renderLoading()}</tbody>
       </table>
-      {renderPagination()}
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPrevious={onPrevious}
+        onNext={onNext}
+      />
       {renderSelectedRow()}
     </div>
   );
