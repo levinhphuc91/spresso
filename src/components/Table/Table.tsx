@@ -107,8 +107,8 @@ const Table: React.FC<TableProps> = ({ rawData, config, loading }) => {
     (item) =>
       item.userId.toString().includes(searchQuery) ||
       item.id.toString().includes(searchQuery) ||
-      item.title.toString().includes(searchQuery) ||
-      item.body.toString().includes(searchQuery)
+      item.title.toLowerCase().includes(searchQuery) ||
+      item.body.toLowerCase().includes(searchQuery)
   );
 
   const paginatedData = filteredData.slice(
@@ -133,6 +133,7 @@ const Table: React.FC<TableProps> = ({ rawData, config, loading }) => {
               <input
                 type="checkbox"
                 className="m-2"
+                aria-label={`Select row ${row.id}`}
                 checked={selectedRows.has(row.id)}
                 onChange={() => handleRowSelectionChange(row.id)}
               />
